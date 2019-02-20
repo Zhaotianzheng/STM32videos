@@ -24,7 +24,7 @@ OBJCOPY=arm-none-eabi-objcopy
 # Compiler flags
 CFLAGS  = -g -O2 -Wall -Tstm32_flash.ld
 CFLAGS += -DUSE_STDPERIPH_DRIVER
-CFLAGS += -specs=nosys.specs
+CFLAGS += -specs=nosys.specs #this solves compiler error
 CFLAGS += -mlittle-endian -mthumb -mcpu=cortex-m4 -mthumb-interwork
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 CFLAGS += -I.
