@@ -3,5 +3,5 @@
 !.gitignore
 !readme.md
 !.gitkeep
-!*.c
+!main.c
 !Makefile
