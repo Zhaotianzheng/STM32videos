@@ -1,1 +1,7 @@
-
+*.*
+!.gitattributes
+!.gitignore
+!readme.md
+!.gitkeep
+!*.c
+!Makefile
