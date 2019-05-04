@@ -5,4 +5,5 @@
 !.gitkeep
 !main.c
 !Makefile
+!TEMPLATE/*
 PREP/
