@@ -22,9 +22,9 @@ void USART_SendNumber(uint32_t x);
 void delayMS(uint32_t ms);
 void delayUS(uint32_t us);
 
-// Global millis for delay functions
+// Global us for delay functions
 uint32_t g_nTicks;
-uint32_t g_nSysTick;
+uint32_t n;
 
 int main(void)
 {
@@ -33,16 +33,8 @@ int main(void)
   USART1_Setup();
   TIMER3_Setup();
 
-  /*
-    Config global system timer to make interrupt every 1000ms -> millis counter
-    Alternate way to using TIMERS
-    If you want this instead of timers, just delete all timer related code
-    and replace the correct variable inside delay funcitons
-  */
-  SysTick_Config(SystemCoreClock / 1000);
-
-  // A structure if you want to check your clock settings
   RCC_ClocksTypeDef RCC_Clocks;
+
   RCC_GetClocksFreq(&RCC_Clocks);
 
   while(1)
@@ -51,10 +43,18 @@ int main(void)
                             GPIO_Pin_13 |
                             GPIO_Pin_14 |
                             GPIO_Pin_15);
+    USART_SendNumber(n++);
     USART_SendText("HI\n");
-    USART_SendNumber(g_nSysTick); // print millis from SysTick
+
+    USART_SendNumber(RCC_Clocks.SYSCLK_Frequency);
+    USART_SendText("\t");
+    USART_SendNumber(RCC_Clocks.HCLK_Frequency);
+    USART_SendText("\t");
+    USART_SendNumber(RCC_Clocks.PCLK1_Frequency);
+    USART_SendText("\t");
+    USART_SendNumber(RCC_Clocks.PCLK2_Frequency);
     USART_SendText("\n");
-    delayMS(1000);
+    delayMS(500);
   }
 }
 
@@ -179,10 +179,4 @@ void TIM3_IRQHandler(void)
     TIM_ClearFlag(TIM3, TIM_FLAG_Update);
     g_nTicks++;
   }
-}
-
-// If you want to do it without timers
-void SysTick_Handler(void)
-{
-  g_nSysTick++;
 }
