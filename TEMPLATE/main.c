@@ -13,7 +13,6 @@
 void RCC_Setup();
 void GPIO_Setup();
 void USART1_Setup();
-void TIMER3_Setup();
 
 // USART prototypes
 void USART_SendText(volatile char *s);
@@ -22,8 +21,7 @@ void USART_SendNumber(uint32_t x);
 void delayMS(uint32_t ms);
 void delayUS(uint32_t us);
 
-// Global millis for delay functions
-uint32_t g_nTicks;
+// Global microseconds for delay functions
 uint32_t g_nSysTick;
 
 int main(void)
@@ -31,15 +29,11 @@ int main(void)
   RCC_Setup();
   GPIO_Setup();
   USART1_Setup();
-  TIMER3_Setup();
 
   /*
-    Config global system timer to make interrupt every 1000ms -> millis counter
-    Alternate way to using TIMERS
-    If you want this instead of timers, just delete all timer related code
-    and replace the correct variable inside delay funcitons
+    Config global system timer to make interrupt every 1us -> microsecond counter
   */
-  SysTick_Config(SystemCoreClock / 1000);
+  SysTick_Config(SystemCoreClock / 1000000);
 
   // A structure if you want to check your clock settings
   RCC_ClocksTypeDef RCC_Clocks;
@@ -64,7 +58,6 @@ void RCC_Setup()
                           RCC_AHB1Periph_GPIOB |
                           RCC_AHB1Periph_GPIOD,
                           ENABLE);
-  RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 }
 
@@ -99,29 +92,14 @@ void USART1_Setup()
   USART_InitTypeDef USART_InitStruct;
   USART_InitStruct.USART_BaudRate = 9600; // change this for your case
   USART_InitStruct.USART_WordLength = USART_WordLength_8b;
-  USART_InitStruct.USART_StopBits = USART_StopBits_1;
-  USART_InitStruct.USART_Parity = USART_Parity_No ;
+  USART_InitStruct.USART_StopBits = USART_StopBits_1; //increase this if you have "slow end"
+  USART_InitStruct.USART_Parity = USART_Parity_No ; //change if data integrity is important
   USART_InitStruct.USART_Mode = USART_Mode_Tx;
   USART_InitStruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
   USART_Init(USART1, &USART_InitStruct);
   USART_Cmd(USART1, ENABLE);
 
   USART_SendText("\nTESTING\n"); // a test
-}
-
-/* This is setup funciton for TIMER3 as uS timer for delay functions */
-void TIMER3_Setup()
-{
-  TIM_TimeBaseInitTypeDef TIM_TimeBaseInitStruct;
-  TIM_TimeBaseInitStruct.TIM_Prescaler = 0;
-  TIM_TimeBaseInitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
-  TIM_TimeBaseInitStruct.TIM_CounterMode = TIM_CounterMode_Up;
-  TIM_TimeBaseInitStruct.TIM_RepetitionCounter = 0;
-  TIM_TimeBaseInitStruct.TIM_Period = 83;
-  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseInitStruct);
-
-  TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-  NVIC_EnableIRQ(TIM3_IRQn);
 }
 
 /* User functions */
@@ -157,31 +135,18 @@ void USART_SendNumber(uint32_t x)
 /* Delay functions */
 void delayUS(uint32_t us)
 {
-  TIM_Cmd(TIM3, ENABLE);
-  g_nTicks = 0;
-  while(g_nTicks < us) __NOP();
-  TIM_Cmd(TIM3, DISABLE);
+  g_nSysTick = 0;
+  while(g_nSysTick < us) __NOP();
 }
 
 void delayMS(uint32_t ms)
 {
-  TIM_Cmd(TIM3, ENABLE);
-  g_nTicks = 0;
-  while(g_nTicks < (ms*1000)) __NOP();
-  TIM_Cmd(TIM3, DISABLE);
+  g_nSysTick = 0;
+  while(g_nSysTick < (ms*1000)) __NOP();
 }
 
 /* Interrupts */
-void TIM3_IRQHandler(void)
-{
-  if(TIM_GetFlagStatus(TIM3, TIM_FLAG_Update))
-  {
-    TIM_ClearFlag(TIM3, TIM_FLAG_Update);
-    g_nTicks++;
-  }
-}
-
-// If you want to do it without timers
+// System timer interrupt
 void SysTick_Handler(void)
 {
   g_nSysTick++;

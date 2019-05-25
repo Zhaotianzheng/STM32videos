@@ -8,7 +8,6 @@ SRCS=main.c system_stm32f4xx.c
 SRCS += stm32f4xx_rcc.c
 SRCS += stm32f4xx_gpio.c
 SRCS += stm32f4xx_usart.c
-SRCS += stm32f4xx_tim.c
 
 # Binaries will be generated with this name (.elf, .bin, .hex)
 PROJ_NAME=template
